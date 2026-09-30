@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Camina hacia el Futuro: descubre qué carrera estudiar o en qué trabajo aplicar según tus gustos y habilidades.">
+  <meta name="theme-color" content="#F4F0FF">
+  <title>Camina hacia el Futuro — Inicio de Sesión</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    /* ---- Layout pantalla login ---- */
+    .auth-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .auth-hero {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+      padding: var(--space-10) var(--space-6) var(--space-8);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-hero::before {
+      content: "";
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+    }
+    .auth-hero::after {
+      content: "";
+      position: absolute;
+      bottom: -30px; left: -30px;
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+    }
+    .hero-emoji {
+      font-size: 3.5rem;
+      margin-bottom: var(--space-3);
+      display: block;
+    }
+    .hero-title {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: #fff;
+      margin-bottom: var(--space-2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .hero-subtitle {
+      font-size: var(--font-size-md);
+      color: rgba(255,255,255,0.88);
+      max-width: 340px;
+      margin: 0 auto;
+      line-height: var(--line-height-loose);
+    }
+
+    .auth-body {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: var(--space-6) var(--space-4) var(--space-10);
+      background: var(--color-bg);
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: var(--max-width-form);
+      background: var(--color-surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border);
+      padding: var(--space-8);
+      animation: fadeInUp 0.45s ease both;
+    }
+
+    .auth-header-actions {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      z-index: 10;
+    }
+
+    #alert-global {
+      margin-bottom: var(--space-4);
+      display: none;
+    }
+    #alert-global.visible { display: flex; }
+
+    /* Password strength bar */
+    .pwd-strength {
+      height: 4px;
+      border-radius: var(--radius-full);
+      background: var(--color-border);
+      margin-top: var(--space-1);
+      overflow: hidden;
+    }
+    .pwd-strength-bar {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width var(--transition-normal), background var(--transition-normal);
+      width: 0%;
+    }
+    .pwd-strength-label {
+      font-size: var(--font-size-xs);
+      margin-top: var(--space-1);
+      color: var(--color-text-muted);
+    }
+
+    /* Theme toggle hero */
+    .hero-top-bar {
+      position: relative;
+      padding: var(--space-3) var(--space-5) 0;
+      display: flex;
+      justify-content: flex-end;
+      background: var(--color-bg);
+    }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: var(--space-5) var(--space-4); border-radius: var(--radius-lg); }
+      .hero-title { font-size: var(--font-size-xl); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay hidden" id="loading-overlay">
+    <p class="loading-text">Cargando</p>
+    <div class="loading-dots">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+  </div>
+
+  <main class="auth-screen">
+    <!-- Theme toggle -->
+    <div class="hero-top-bar">
+      <button class="theme-toggle" aria-label="Cambiar tema" title="Cambiar modo claro/oscuro">
+        <span class="theme-icon">🌙</span>
+        <span class="theme-label visually-hidden">Modo oscuro</span>
+      </button>
+    </div>
+
+    <!-- Hero -->
+    <header class="auth-hero" role="banner">
+      <span class="hero-emoji" aria-hidden="true">🚀</span>
+      <h1 class="hero-title">Camina hacia el Futuro</h1>
+      <p class="hero-subtitle">
+        Descubre qué carrera estudiar o en qué trabajo aplicar,
+        según tus gustos y habilidades reales.
+      </p>
+    </header>
+
+    <!-- Formulario -->
+    <div class="auth-body">
+      <section class="auth-card" aria-label="Formulario de acceso">
+
+        <!-- Alerta global -->
+        <div id="alert-global" class="alert" role="alert" aria-live="polite"></div>
+
+        <!-- Tabs -->
+        <div class="auth-tabs" role="tablist">
+          <button
+            class="auth-tab active"
+            id="tab-login"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panel-login"
+            data-tab="login"
+          >
+            Iniciar Sesión
+          </button>
+          <button
+            class="auth-tab"
+            id="tab-register"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-register"
+            data-tab="register"
+          >
+            Crear Cuenta
+          </button>
+        </div>
+
+        <!-- Panel: Login -->
+        <div id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+          <form id="form-login" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="login-email">Correo Electrónico</label>
+              <input
+                type="email"
+                id="login-email"
+                class="form-input"
+                placeholder="tucorreo@ejemplo.com"
+                autocomplete="email"
+                required
+                aria-required="true"
+              >
+              <span class="form-error" id="err-login-email">
+                ⚠️ Ingresa un correo válido.
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="login-password">Contraseña</label>
+              <div class="input-wrapper">
+                <input
+                  type="password"
+                  id="login-password"
+                  class="form-input"
+                  placeholder="Tu contraseña"
+                  autocomplete="current-password"
+                  required
+                  aria-required="true"
+                >
+                <button type="button" class="input-toggle" aria-label="Mostrar/ocultar contraseña" data-target="login-password">
+                  <span>👁️</span>
+                </button>
+              </div>
+              <span class="form-error" id="err-login-password">
+                ⚠️ Ingresa tu contraseña.
+              </span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full btn-lg" id="btn-login">
+              Iniciar Sesión
+            </button>
+          </form>
+
+          <div class="divider"><span>¿No tienes cuenta?</span></div>
+          <button
+            type="button"
+            class="btn btn-outline btn-full"
+            id="go-to-register"
+          >
+            Crear una cuenta nueva
+          </button>
+        </div>
+
+        <!-- Panel: Registro -->
+        <div id="panel-register" role="tabpanel" aria-labelledby="tab-register" class="hidden">
+          <form id="form-register" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="reg-name">Nombre Completo</label>
+              <input
+                type="text"
+                id="reg-name"
+                class="form-input"
+                placeholder="Tu nombre completo"
+                autocomplete="name"
+                required
+                aria-required="true"
+              >
+              <span class="form-error" id="err-reg-name">⚠️ Ingresa tu nombre.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="reg-email">Correo Electrónico</label>
+              <input
+                type="email"
+                id="reg-email"
+                class="form-input"
+                placeholder="tucorreo@ejemplo.com"
+                autocomplete="email"
+                required
+                aria-required="true"
+              >
+              <span class="form-error" id="err-reg-email">⚠️ Ingresa un correo válido.</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4);">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" for="reg-city">Ciudad</label>
+                <input
+                  type="text"
+                  id="reg-city"
+                  class="form-input"
+                  placeholder="Bogotá, Medellín..."
+                  required
+                  aria-required="true"
+                >
+                <span class="form-error" id="err-reg-city">⚠️ Ingresa tu ciudad.</span>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" for="reg-age">Edad</label>
+                <input
+                  type="number"
+                  id="reg-age"
+                  class="form-input"
+                  placeholder="18"
+                  min="14" max="35"
+                  required
+                  aria-required="true"
+                >
+                <span class="form-error" id="err-reg-age">⚠️ Edad entre 14 y 35.</span>
+              </div>
+            </div>
+
+            <div class="form-group mt-4">
+              <label class="form-label" for="reg-phone">Teléfono <span style="font-weight:400;font-size:0.75rem;">(Opcional)</span></label>
+              <input
+                type="tel"
+                id="reg-phone"
+                class="form-input"
+                placeholder="+57 310 123 4567"
+                autocomplete="tel"
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="reg-password">Contraseña</label>
+              <div class="input-wrapper">
+                <input
+                  type="password"
+                  id="reg-password"
+                  class="form-input"
+                  placeholder="Mínimo 8 caracteres"
+                  autocomplete="new-password"
+                  required
+                  aria-required="true"
+                  aria-describedby="pwd-hint"
+                >
+                <button type="button" class="input-toggle" aria-label="Mostrar/ocultar contraseña" data-target="reg-password">
+                  <span>👁️</span>
+                </button>
+              </div>
+              <div class="pwd-strength" aria-hidden="true">
+                <div class="pwd-strength-bar" id="pwd-bar"></div>
+              </div>
+              <span class="pwd-strength-label" id="pwd-label" aria-live="polite"></span>
+              <span class="form-error" id="err-reg-password">⚠️ La contraseña debe tener más de 8 caracteres.</span>
+              <span class="form-hint" id="pwd-hint">Usa letras, números y símbolos para una contraseña segura.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="reg-password2">Confirmar Contraseña</label>
+              <div class="input-wrapper">
+                <input
+                  type="password"
+                  id="reg-password2"
+                  class="form-input"
+                  placeholder="Repite la contraseña"
+                  autocomplete="new-password"
+                  required
+                  aria-required="true"
+                >
+                <button type="button" class="input-toggle" aria-label="Mostrar/ocultar" data-target="reg-password2">
+                  <span>👁️</span>
+                </button>
+              </div>
+              <span class="form-error" id="err-reg-password2">⚠️ Las contraseñas no coinciden.</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full btn-lg" id="btn-register">
+              Crear Cuenta
+            </button>
+          </form>
+
+          <div class="divider"><span>¿Ya tienes cuenta?</span></div>
+          <button type="button" class="btn btn-outline btn-full" id="go-to-login">
+            Iniciar sesión
+          </button>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    "use strict";
+    // ---- Tab switching ----
+    const tabBtns   = document.querySelectorAll(".auth-tab");
+    const panelLogin    = document.getElementById("panel-login");
+    const panelRegister = document.getElementById("panel-register");
+    const alertGlobal   = document.getElementById("alert-global");
+
+    function switchTab(target) {
+      tabBtns.forEach(b => {
+        b.classList.toggle("active", b.dataset.tab === target);
+        b.setAttribute("aria-selected", b.dataset.tab === target);
+      });
+      if (target === "login") {
+        panelLogin.classList.remove("hidden");
+        panelRegister.classList.add("hidden");
+      } else {
+        panelLogin.classList.add("hidden");
+        panelRegister.classList.remove("hidden");
+      }
+      hideAlert();
+    }
+
+    tabBtns.forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+    document.getElementById("go-to-register").addEventListener("click", () => switchTab("register"));
+    document.getElementById("go-to-login").addEventListener("click",    () => switchTab("login"));
+
+    // ---- Mostrar alerta ----
+    function showAlert(msg, type = "error") {
+      alertGlobal.className = `alert alert-${type} visible`;
+      alertGlobal.innerHTML = `<span>${type === "error" ? "❌" : "✅"}</span><span>${msg}</span>`;
+      alertGlobal.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    function hideAlert() {
+      alertGlobal.className = "alert";
+      alertGlobal.style.display = "none";
+    }
+
+    // ---- Password toggle ----
+    document.querySelectorAll(".input-toggle").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+        input.type = input.type === "password" ? "text" : "password";
+        btn.querySelector("span").textContent = input.type === "password" ? "👁️" : "🙈";
+      });
+    });
+
+    // ---- Fortaleza contraseña ----
+    const pwdInput = document.getElementById("reg-password");
+    const pwdBar   = document.getElementById("pwd-bar");
+    const pwdLabel = document.getElementById("pwd-label");
+
+    pwdInput.addEventListener("input", () => {
+      const val = pwdInput.value;
+      let score = 0;
+      if (val.length >= 8)  score++;
+      if (val.length >= 12) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const levels = [
+        { w: "0%",   color: "var(--color-border)",   label: "" },
+        { w: "25%",  color: "var(--color-danger)",   label: "Muy débil" },
+        { w: "50%",  color: "var(--color-accent)",   label: "Débil" },
+        { w: "75%",  color: "var(--color-study)",    label: "Buena" },
+        { w: "100%", color: "var(--color-success)",  label: "Muy fuerte" },
+      ];
+      const lvl = levels[Math.min(score, 4)];
+      pwdBar.style.width     = val.length === 0 ? "0%" : lvl.w;
+      pwdBar.style.background = lvl.color;
+      pwdLabel.textContent   = val.length === 0 ? "" : lvl.label;
+    });
+
+    // ---- Validaciones inline ----
+    function setError(id, show) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.toggle("visible", show); }
+    }
+    function setInputError(id, show) {
+      const el = document.getElementById(id);
+      if (el) { el.classList.toggle("error", show); }
+    }
+
+    // ---- LOGIN ----
+    document.getElementById("form-login").addEventListener("submit", (e) => {
+      e.preventDefault();
+      hideAlert();
+      const correo    = document.getElementById("login-email").value.trim();
+      const contrasena = document.getElementById("login-password").value;
+
+      let hasError = false;
+      if (!Auth.validateEmail(correo)) {
+        setError("err-login-email", true);
+        setInputError("login-email", true);
+        hasError = true;
+      } else {
+        setError("err-login-email", false);
+        setInputError("login-email", false);
+      }
+      if (!contrasena) {
+        setError("err-login-password", true);
+        setInputError("login-password", true);
+        hasError = true;
+      } else {
+        setError("err-login-password", false);
+        setInputError("login-password", false);
+      }
+      if (hasError) return;
+
+      const result = Auth.login({ correo, contrasena });
+      if (result.ok) {
+        showAlert("¡Bienvenido/a de vuelta, " + result.user.nombre.split(" ")[0] + "! 🎉", "success");
+        setTimeout(() => Nav.go("html/eleccion.html"), 900);
+      } else {
+        showAlert(result.error);
+      }
+    });
+
+    // ---- REGISTRO ----
+    document.getElementById("form-register").addEventListener("submit", (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const nombre     = document.getElementById("reg-name").value.trim();
+      const correo     = document.getElementById("reg-email").value.trim();
+      const ciudad     = document.getElementById("reg-city").value.trim();
+      const edad       = document.getElementById("reg-age").value;
+      const telefono   = document.getElementById("reg-phone").value.trim();
+      const contrasena = document.getElementById("reg-password").value;
+      const confirm    = document.getElementById("reg-password2").value;
+
+      let hasError = false;
+      const checks = [
+        ["reg-name",      "err-reg-name",      nombre.length >= 2],
+        ["reg-email",     "err-reg-email",      Auth.validateEmail(correo)],
+        ["reg-city",      "err-reg-city",       ciudad.length >= 2],
+        ["reg-age",       "err-reg-age",        edad && parseInt(edad) >= 14 && parseInt(edad) <= 35],
+        ["reg-password",  "err-reg-password",   Auth.validatePassword(contrasena)],
+        ["reg-password2", "err-reg-password2",  contrasena === confirm && confirm.length > 0],
+      ];
+
+      checks.forEach(([inputId, errId, valid]) => {
+        setError(errId, !valid);
+        setInputError(inputId, !valid);
+        if (!valid) hasError = true;
+      });
+
+      if (hasError) return;
+
+      const result = Auth.register({ nombre, correo, contrasena, ciudad, edad, telefono });
+      if (result.ok) {
+        showAlert("¡Cuenta creada exitosamente! 🎉 Redirigiendo...", "success");
+        setTimeout(() => Nav.go("html/eleccion.html"), 1100);
+      } else {
+        showAlert(result.error);
+      }
+    });
+
+    // ---- Limpiar errores al escribir ----
+    document.querySelectorAll(".form-input").forEach(input => {
+      input.addEventListener("input", () => {
+        input.classList.remove("error");
+      });
+    });
+
+    // ---- Redirigir si ya hay sesión ----
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = Auth.getCurrentUser();
+      if (user) Nav.go("html/eleccion.html", 0);
+    });
+  </script>
+</body>
+</html>
