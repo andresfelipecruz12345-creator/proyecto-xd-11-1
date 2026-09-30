@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Página no encontrada — Camina hacia el Futuro">
+  <title>Camina hacia el Futuro — Página no encontrada</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    body {
+      background: var(--color-bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-6);
+    }
+
+    .error-page {
+      max-width: 480px;
+      animation: fadeInUp 0.5s ease;
+    }
+
+    .error-code {
+      font-size: clamp(5rem, 18vw, 9rem);
+      font-weight: var(--font-weight-bold);
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: var(--space-4);
+      letter-spacing: -0.03em;
+    }
+
+    .error-icon {
+      font-size: 4rem;
+      margin-bottom: var(--space-6);
+      display: block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-12px); }
+    }
+
+    .error-title {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-3);
+    }
+
+    .error-desc {
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-loose);
+      margin-bottom: var(--space-8);
+      font-size: var(--font-size-md);
+    }
+
+    .error-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      justify-content: center;
+    }
+
+    .error-links {
+      margin-top: var(--space-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      align-items: center;
+    }
+    .error-links-title {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-2);
+    }
+    .error-link {
+      font-size: var(--font-size-sm);
+      color: var(--color-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md);
+      transition: background var(--transition-fast);
+    }
+    .error-link:hover { background: var(--color-surface-alt); }
+
+    .theme-toggle-fixed {
+      position: fixed;
+      top: var(--space-4);
+      right: var(--space-4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Botón de tema en esquina -->
+  <button class="btn btn-ghost btn-sm theme-toggle theme-toggle-fixed" aria-label="Cambiar tema">
+    <span class="theme-icon">🌙</span>
+  </button>
+
+  <main class="error-page" role="main">
+    <span class="error-icon" aria-hidden="true">🗺️</span>
+    <div class="error-code" aria-label="Error 404">404</div>
+    <h1 class="error-title">¡Ups! Página no encontrada</h1>
+    <p class="error-desc">
+      Parece que la página que buscas no existe o fue movida.<br>
+      ¡Pero no te rindas! Tu camino hacia el futuro sigue adelante.
+    </p>
+
+    <div class="error-actions">
+      <button class="btn btn-primary" id="btn-inicio" onclick="irInicio()">
+        🚀 Ir al Inicio
+      </button>
+      <button class="btn btn-outline" onclick="history.back()">
+        ← Volver atrás
+      </button>
+    </div>
+
+    <div class="error-links">
+      <p class="error-links-title">O ve directamente a:</p>
+      <a href="../index.html"    class="error-link">🔑 Iniciar sesión / Registrarse</a>
+      <a href="eleccion.html" class="error-link">🎯 Elegir tipo de test</a>
+      <a href="perfil.html"   class="error-link">👤 Mi Perfil</a>
+    </div>
+  </main>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    "use strict";
+
+    function irInicio() {
+      const user = window.Auth ? Auth.getCurrentUser() : null;
+      window.location.href = user ? "eleccion.html" : "../index.html";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = window.Auth ? Auth.getCurrentUser() : null;
+      const btn = document.getElementById("btn-inicio");
+      if (btn && user) btn.textContent = "🚀 Volver al inicio";
+    });
+  </script>
+</body>
+</html>

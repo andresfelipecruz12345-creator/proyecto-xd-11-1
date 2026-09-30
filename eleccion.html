@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Elige si quieres orientación vocacional para Estudios o para Trabajo.">
+  <title>Camina hacia el Futuro — ¿Estudiar o Trabajar?</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .page-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--color-bg);
+    }
+
+    /* ---- Encabezado de bienvenida ---- */
+    .welcome-section {
+      text-align: center;
+      padding: var(--space-10) var(--space-6) var(--space-6);
+    }
+    .welcome-greeting {
+      font-size: var(--font-size-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-2);
+    }
+    .welcome-name {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-3);
+    }
+    .welcome-name span { color: var(--color-primary); }
+    .welcome-desc {
+      max-width: 520px;
+      margin: 0 auto;
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-loose);
+    }
+
+    /* ---- Selector de flujo ---- */
+    .choice-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-4) var(--space-6) var(--space-6);
+    }
+
+    .choice-label {
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      text-align: center;
+      margin-bottom: var(--space-6);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .choice-cards {
+      display: flex;
+      gap: var(--space-5);
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: var(--space-8);
+    }
+
+    .choice-card {
+      width: 220px;
+      background: var(--color-surface);
+      border: 2.5px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8) var(--space-6);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    .choice-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity var(--transition-normal);
+    }
+    .choice-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .choice-card:active { transform: scale(0.97); }
+
+    .choice-card-study::before  { background: linear-gradient(135deg, rgba(91,168,245,0.08) 0%, rgba(91,168,245,0.14) 100%); }
+    .choice-card-work::before   { background: linear-gradient(135deg, rgba(93,191,138,0.08) 0%, rgba(93,191,138,0.14) 100%); }
+
+    .choice-card.selected.choice-card-study {
+      border-color: var(--color-study);
+      box-shadow: 0 0 0 4px rgba(91,168,245,0.18), var(--shadow-md);
+      transform: translateY(-4px);
+    }
+    .choice-card.selected.choice-card-study::before { opacity: 1; }
+    .choice-card.selected.choice-card-work {
+      border-color: var(--color-work);
+      box-shadow: 0 0 0 4px rgba(93,191,138,0.18), var(--shadow-md);
+      transform: translateY(-4px);
+    }
+    .choice-card.selected.choice-card-work::before { opacity: 1; }
+
+    .choice-icon { font-size: 3rem; margin-bottom: var(--space-4); display: block; transition: transform var(--transition-normal); }
+    .choice-card:hover .choice-icon { transform: scale(1.1) rotate(-5deg); }
+
+    .choice-card-title {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-2);
+    }
+    .choice-card-study .choice-card-title { color: var(--color-study-dark); }
+    .choice-card-work  .choice-card-title { color: var(--color-work-dark);  }
+    .choice-card-desc { font-size: var(--font-size-sm); color: var(--color-text-muted); line-height: var(--line-height-normal); }
+
+    .choice-check {
+      position: absolute;
+      top: var(--space-3); right: var(--space-3);
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      opacity: 0; transform: scale(0);
+      transition: all var(--transition-fast);
+    }
+    .choice-card-study .choice-check { background: var(--color-study); color: #fff; }
+    .choice-card-work  .choice-check { background: var(--color-work);  color: #fff; }
+    .choice-card.selected .choice-check { opacity: 1; transform: scale(1); }
+
+    .choice-hint {
+      text-align: center;
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-6);
+      transition: all var(--transition-fast);
+    }
+    .choice-hint.selected-study { color: var(--color-study-dark); font-weight: var(--font-weight-semibold); }
+    .choice-hint.selected-work  { color: var(--color-work-dark);  font-weight: var(--font-weight-semibold); }
+
+    .btn-start {
+      min-width: 220px;
+      background: var(--color-primary);
+      color: #fff;
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      padding: var(--space-4) var(--space-10);
+      border: 2px solid var(--color-primary);
+      transition: all var(--transition-fast);
+    }
+    .btn-start:not(:disabled):hover {
+      background: var(--color-primary-dark);
+      border-color: var(--color-primary-dark);
+      box-shadow: 0 6px 20px rgba(124,92,191,0.38);
+      transform: translateY(-2px);
+    }
+    .btn-start:disabled {
+      background: var(--color-border);
+      border-color: var(--color-border);
+      color: var(--color-text-muted);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .info-strip {
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      padding: var(--space-6);
+      display: flex;
+      justify-content: center;
+      gap: var(--space-8);
+      flex-wrap: wrap;
+    }
+    .info-item {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .info-item .info-icon { font-size: 1.5rem; }
+    .info-item .info-text { font-size: var(--font-size-xs); color: var(--color-text-muted); max-width: 120px; line-height: var(--line-height-normal); }
+    .info-item .info-number { font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); color: var(--color-primary); }
+
+    @media (max-width: 480px) {
+      .choice-cards { flex-direction: column; align-items: center; gap: var(--space-4); }
+      .choice-card  { width: 100%; max-width: 320px; padding: var(--space-6); }
+      .welcome-section { padding: var(--space-8) var(--space-4) var(--space-4); }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading-overlay">
+    <p class="loading-text">Cargando</p>
+    <div class="loading-dots">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+  </div>
+
+  <div class="page-wrapper">
+    <header class="app-header" role="banner">
+      <a href="../index.html" class="logo" aria-label="Inicio">
+        <span class="logo-icon" aria-hidden="true">🚀</span>
+        <span class="logo-text">Camina hacia el <span>Futuro</span></span>
+      </a>
+      <div class="header-actions">
+        <span class="user-name-display" style="font-size:var(--font-size-sm); color:var(--color-text-secondary); display:none;" aria-live="polite"></span>
+        <a href="perfil.html" class="btn btn-ghost btn-sm" aria-label="Ver mi perfil" title="Mi Perfil">
+          👤 Mi Perfil
+        </a>
+        <button class="theme-toggle" aria-label="Cambiar tema">
+          <span class="theme-icon">🌙</span>
+        </button>
+        <button class="btn btn-ghost btn-sm btn-logout" aria-label="Cerrar sesión">
+          Salir
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content" id="main">
+      <section class="welcome-section animate-fade-in-up" aria-label="Bienvenida">
+        <p class="welcome-greeting">¡Hola!</p>
+        <h1 class="welcome-name">Bienvenido/a, <span id="user-display-name">joven</span> 👋</h1>
+        <p class="welcome-desc">
+          Este cuestionario te ayudará a descubrir qué camino tomar ahora que te graduaste.
+          <strong>Elige una opción para comenzar:</strong>
+        </p>
+      </section>
+
+      <section class="choice-section" aria-label="Selección de tipo de test">
+        <p class="choice-label" id="choice-prompt">¿Qué deseas explorar?</p>
+        <div class="choice-cards" role="group" aria-label="Opciones de orientación">
+          <article class="choice-card choice-card-study animate-fade-in-up delay-1" id="card-study"
+            role="button" tabindex="0" aria-pressed="false"
+            aria-label="Elegir orientación hacia estudios universitarios">
+            <div class="choice-check" aria-hidden="true">✓</div>
+            <span class="choice-icon" aria-hidden="true">🎓</span>
+            <h2 class="choice-card-title">Estudio</h2>
+            <p class="choice-card-desc">Descubre qué carrera universitaria se adapta mejor a tus gustos y habilidades.</p>
+          </article>
+          <article class="choice-card choice-card-work animate-fade-in-up delay-2" id="card-work"
+            role="button" tabindex="0" aria-pressed="false"
+            aria-label="Elegir orientación hacia el mundo laboral">
+            <div class="choice-check" aria-hidden="true">✓</div>
+            <span class="choice-icon" aria-hidden="true">💼</span>
+            <h2 class="choice-card-title">Trabajo</h2>
+            <p class="choice-card-desc">Encuentra qué puesto laboral encaja con tus habilidades y fortalezas actuales.</p>
+          </article>
+        </div>
+
+        <p class="choice-hint animate-fade-in" id="choice-hint" aria-live="polite">
+          Selecciona una opción para habilitar el botón de inicio
+        </p>
+        <button class="btn btn-start animate-fade-in-up delay-3" id="btn-start"
+          disabled aria-disabled="true" aria-describedby="choice-hint">
+          Iniciar Test
+        </button>
+      </section>
+
+      <aside class="info-strip" aria-label="Información del cuestionario">
+        <div class="info-item"><span class="info-icon" aria-hidden="true">📝</span><span class="info-number">50</span><p class="info-text">preguntas en total</p></div>
+        <div class="info-item"><span class="info-icon" aria-hidden="true">⏱️</span><span class="info-number">~15</span><p class="info-text">minutos aproximados</p></div>
+        <div class="info-item"><span class="info-icon" aria-hidden="true">🏆</span><span class="info-number">10</span><p class="info-text">áreas vocacionales evaluadas</p></div>
+        <div class="info-item"><span class="info-icon" aria-hidden="true">📄</span><span class="info-number">PDF</span><p class="info-text">descarga tus resultados</p></div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/quiz.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    "use strict";
+
+    const user = Auth.requireAuth("../index.html");
+    if (user) {
+      const nameEl = document.getElementById("user-display-name");
+      if (nameEl) nameEl.textContent = user.nombre.split(" ")[0];
+      const headerName = document.querySelector(".user-name-display");
+      if (headerName) { headerName.style.display = ""; headerName.textContent = user.nombre.split(" ")[0]; }
+    }
+
+    let flujoSeleccionado = null;
+    const cardStudy  = document.getElementById("card-study");
+    const cardWork   = document.getElementById("card-work");
+    const btnStart   = document.getElementById("btn-start");
+    const choiceHint = document.getElementById("choice-hint");
+
+    function selectFlujo(flujo) {
+      flujoSeleccionado = flujo;
+      cardStudy.classList.toggle("selected", flujo === "Estudio");
+      cardStudy.setAttribute("aria-pressed", flujo === "Estudio");
+      cardWork.classList.toggle("selected",  flujo === "Trabajo");
+      cardWork.setAttribute("aria-pressed",  flujo === "Trabajo");
+      btnStart.disabled = false;
+      btnStart.removeAttribute("aria-disabled");
+      if (flujo === "Estudio") {
+        choiceHint.textContent = "🎓 Has elegido ESTUDIO — el test buscará la carrera universitaria ideal para ti.";
+        choiceHint.className   = "choice-hint selected-study";
+        btnStart.style.background  = "var(--color-study)";
+        btnStart.style.borderColor = "var(--color-study)";
+      } else {
+        choiceHint.textContent = "💼 Has elegido TRABAJO — el test encontrará el puesto laboral más adecuado para ti.";
+        choiceHint.className   = "choice-hint selected-work";
+        btnStart.style.background  = "var(--color-work)";
+        btnStart.style.borderColor = "var(--color-work)";
+      }
+    }
+
+    cardStudy.addEventListener("click",  () => selectFlujo("Estudio"));
+    cardWork.addEventListener("click",   () => selectFlujo("Trabajo"));
+
+    [cardStudy, cardWork].forEach(card => {
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); card.click(); }
+      });
+    });
+
+    btnStart.addEventListener("click", () => {
+      if (!flujoSeleccionado) return;
+      Quiz.startNew(flujoSeleccionado);
+      Nav.go("preguntas-generales.html");
+    });
+
+    // Pre-selección por query param ?flujo=estudio|trabajo
+    (function preSelectFromParam() {
+      const params = new URLSearchParams(window.location.search);
+      const param  = (params.get("flujo") || "").toLowerCase().trim();
+      if (param === "estudio")      setTimeout(() => selectFlujo("Estudio"), 120);
+      else if (param === "trabajo") setTimeout(() => selectFlujo("Trabajo"), 120);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Resultados de tu cuestionario vocacional — Camina hacia el Futuro.">
+  <title>Camina hacia el Futuro — Tus Resultados</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <!-- jsPDF + html2canvas para PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    body { background: var(--color-bg); }
+
+    .results-wrapper {
+      padding-top: var(--header-height);
+      min-height: 100vh;
+    }
+
+    /* ---- Hero resultado ---- */
+    .results-hero {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+      padding: var(--space-10) var(--space-6) var(--space-8);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .results-hero::before {
+      content: "";
+      position: absolute;
+      top: -50px; right: -50px;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+    }
+
+    .hero-label {
+      display: inline-block;
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: var(--space-1) var(--space-4);
+      border-radius: var(--radius-full);
+      margin-bottom: var(--space-4);
+    }
+    .hero-title {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: #fff;
+      margin-bottom: var(--space-2);
+    }
+    .hero-subtitle { color: rgba(255,255,255,0.88); font-size: var(--font-size-md); }
+
+    /* ---- Score circle grande ---- */
+    .score-ring {
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      margin: var(--space-5) auto var(--space-3);
+      border: 8px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(4px);
+    }
+    .score-ring .score-pct {
+      font-size: 2.5rem;
+      font-weight: var(--font-weight-bold);
+      color: #fff;
+      line-height: 1;
+    }
+    .score-ring .score-label {
+      font-size: var(--font-size-xs);
+      color: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ---- Secciones de contenido ---- */
+    .results-content {
+      max-width: var(--max-width-quiz);
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-4) var(--space-12);
+    }
+
+    .section-title {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 2px;
+      background: var(--color-border);
+    }
+
+    /* Veredicto */
+    .verdict-card {
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      margin-bottom: var(--space-8);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .verdict-card.pass {
+      background: var(--color-success-light);
+      border: 2px solid var(--color-success);
+    }
+    .verdict-card.fail {
+      background: var(--color-danger-light);
+      border: 2px solid var(--color-danger);
+    }
+    .verdict-icon { font-size: 3rem; margin-bottom: var(--space-3); display: block; }
+    .verdict-title {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-2);
+    }
+    .verdict-card.pass .verdict-title { color: var(--color-success); }
+    .verdict-card.fail .verdict-title { color: var(--color-danger); }
+    .verdict-desc { color: var(--color-text-secondary); line-height: var(--line-height-loose); }
+    .recommended-name {
+      display: inline-block;
+      background: var(--color-primary);
+      color: #fff;
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      padding: var(--space-2) var(--space-5);
+      border-radius: var(--radius-full);
+      margin: var(--space-3) 0;
+    }
+
+    /* Grid de métricas */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    /* Ubicaciones */
+    .locations-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    /* Similares (acordeón) */
+    .similares-section {
+      margin-bottom: var(--space-8);
+    }
+    .similares-toggle {
+      width: 100%;
+      text-align: left;
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4) var(--space-6);
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all var(--transition-fast);
+    }
+    .similares-toggle:hover {
+      border-color: var(--color-primary);
+      background: var(--color-surface-alt);
+    }
+    .similares-toggle .toggle-arrow { transition: transform var(--transition-fast); }
+    .similares-toggle.open { border-color: var(--color-primary); background: var(--color-surface-alt); }
+    .similares-toggle.open .toggle-arrow { transform: rotate(180deg); }
+
+    .similares-content {
+      display: none;
+      padding: var(--space-4) 0;
+      animation: fadeIn 0.3s ease;
+    }
+    .similares-content.open { display: block; }
+
+    .similar-card {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-3);
+      transition: all var(--transition-fast);
+    }
+    .similar-card:hover { border-color: var(--color-primary-light); box-shadow: var(--shadow-sm); }
+    .similar-icon { font-size: 2rem; flex-shrink: 0; }
+    .similar-name { font-weight: var(--font-weight-semibold); color: var(--color-text-primary); }
+    .similar-area { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: var(--space-1); }
+    .similar-desc { font-size: var(--font-size-sm); color: var(--color-text-secondary); margin-top: var(--space-2); }
+
+    /* Detalle de respuestas */
+    .detail-section { margin-bottom: var(--space-8); }
+    .detail-list { display: flex; flex-direction: column; gap: var(--space-3); }
+    .detail-item {
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      transition: border-color var(--transition-fast);
+    }
+    .detail-item.correct  { border-left: 4px solid var(--color-success); }
+    .detail-item.incorrect { border-left: 4px solid var(--color-danger); }
+    .detail-item.libre    { border-left: 4px solid var(--color-primary-light); }
+    .detail-q { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); margin-bottom: var(--space-2); }
+    .detail-answer { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+    .detail-correct-ans { font-size: var(--font-size-sm); color: var(--color-success); font-weight: var(--font-weight-medium); margin-top: var(--space-1); }
+    .detail-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--space-2);
+    }
+    .detail-badge.pass { background: var(--color-success-light); color: var(--color-success); }
+    .detail-badge.fail { background: var(--color-danger-light);  color: var(--color-danger); }
+    .detail-badge.libre { background: var(--color-surface-alt); color: var(--color-primary); }
+
+    /* Acciones finales */
+    .results-actions {
+      display: flex;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: var(--space-6) 0 var(--space-10);
+    }
+    .btn-share {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    /* Modal de compartir (fallback clipboard) */
+    .share-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 600;
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--space-4);
+      animation: fadeIn 0.2s ease;
+    }
+    .share-modal-overlay.hidden { display: none; }
+    .share-modal {
+      background: var(--color-surface);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      max-width: 440px;
+      width: 100%;
+      box-shadow: var(--shadow-xl);
+      text-align: center;
+    }
+    .share-modal h3 { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-bottom: var(--space-2); }
+    .share-modal p  { color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: var(--space-5); line-height: var(--line-height-loose); }
+    .share-text-box {
+      background: var(--color-surface-alt);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-primary);
+      text-align: left;
+      line-height: var(--line-height-loose);
+      margin-bottom: var(--space-5);
+      word-break: break-word;
+    }
+    .share-modal-actions { display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; }
+
+    @media (max-width: 480px) {
+      /* Header con muchos botones: ocultar texto del logo */
+      .logo-text { display: none !important; }
+    }
+    @media (max-width: 640px) {
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .results-hero { padding: var(--space-8) var(--space-4) var(--space-6); }
+      .score-ring { width: 130px; height: 130px; }
+      .score-ring .score-pct { font-size: 2rem; }
+      .verdict-card { padding: var(--space-5); }
+      /* Botones de acciones: full-width apilados en móvil */
+      .results-actions {
+        flex-direction: column;
+        align-items: stretch;
+        padding: var(--space-5) 0 var(--space-10);
+        gap: var(--space-3);
+      }
+      .results-actions .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading-overlay">
+    <p class="loading-text">Cargando</p>
+    <div class="loading-dots">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+  </div>
+
+  <div class="results-wrapper">
+    <header class="app-header">
+      <a href="eleccion.html" class="logo">
+        <span class="logo-icon" aria-hidden="true">🚀</span>
+        <span class="logo-text">Camina hacia el <span>Futuro</span></span>
+      </a>
+      <div class="header-actions">
+        <span class="user-name-display" style="font-size:var(--font-size-sm);color:var(--color-text-secondary);"></span>
+        <a href="perfil.html" class="btn btn-ghost btn-sm" aria-label="Ver mi perfil" title="Mi Perfil">
+          👤 Mi Perfil
+        </a>
+        <button class="theme-toggle" aria-label="Cambiar tema">
+          <span class="theme-icon">🌙</span>
+        </button>
+        <button class="btn btn-ghost btn-sm btn-logout">Salir</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero con puntaje -->
+      <section class="results-hero" aria-label="Resultado principal">
+        <span class="hero-label" id="hero-label">🎓 RESULTADO: ESTUDIO</span>
+        <div class="score-ring" role="img" aria-labelledby="score-announce">
+          <span class="score-pct" id="score-pct-big">—</span>
+          <span class="score-label">puntaje</span>
+        </div>
+        <p id="score-announce" class="visually-hidden"></p>
+        <h1 class="hero-title" id="hero-area-title">Cargando resultado...</h1>
+        <p class="hero-subtitle" id="hero-subtitle"></p>
+      </section>
+
+      <div class="results-content">
+
+        <!-- Stepper -->
+        <nav class="stepper" style="margin-bottom:var(--space-8);" aria-label="Pasos completados">
+          <div class="step-item done"><div class="step-circle">✓</div><span class="step-label">Generales</span></div>
+          <div class="step-connector done"></div>
+          <div class="step-item done"><div class="step-circle">✓</div><span class="step-label">Final</span></div>
+          <div class="step-connector done"></div>
+          <div class="step-item active"><div class="step-circle">🏆</div><span class="step-label">Resultados</span></div>
+        </nav>
+
+        <!-- Veredicto -->
+        <div id="verdict-section" class="animate-fade-in-up"></div>
+
+        <!-- Métricas -->
+        <h2 class="section-title"><span>📊</span>Métricas</h2>
+        <div class="metrics-grid animate-fade-in-up delay-1" id="metrics-grid"></div>
+
+        <!-- Ubicaciones -->
+        <h2 class="section-title" id="locations-title"><span>📍</span>Dónde encontrarlo en tu ciudad</h2>
+        <div class="locations-grid animate-fade-in-up delay-2" id="locations-grid"></div>
+
+        <!-- Ver otras opciones -->
+        <div class="similares-section animate-fade-in-up delay-3">
+          <button class="similares-toggle" id="toggle-similares" aria-expanded="false" aria-controls="similares-content">
+            <span>🔍 Ver otras opciones relacionadas</span>
+            <span class="toggle-arrow" aria-hidden="true">▼</span>
+          </button>
+          <div class="similares-content" id="similares-content" role="region" aria-label="Opciones similares"></div>
+        </div>
+
+        <!-- Detalle de respuestas -->
+        <div class="detail-section">
+          <h2 class="section-title"><span>📋</span>Respuestas del cuestionario</h2>
+          <p style="color:var(--color-text-muted); font-size:var(--font-size-sm); margin-bottom:var(--space-5);">
+            Aquí puedes ver todas las respuestas correctas, independientemente de si las acertaste o no.
+          </p>
+          <div class="detail-list" id="detail-list"></div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="results-actions">
+          <button class="btn btn-primary btn-lg" id="btn-download-pdf" aria-label="Descargar resultados en PDF">
+            📄 Descargar PDF
+          </button>
+          <a href="historial.html" class="btn btn-outline btn-lg" aria-label="Ver historial de tests">
+            📋 Ver historial
+          </a>
+          <button class="btn btn-ghost btn-lg btn-share" id="btn-share" aria-label="Compartir mi resultado">
+            🔗 Compartir resultado
+          </button>
+          <button class="btn btn-outline btn-lg" id="btn-new-test" aria-label="Realizar un nuevo test">
+            🔄 Hacer otro test
+          </button>
+        </div>
+
+        <!-- Modal de compartir (fallback cuando no hay Web Share API) -->
+        <div class="share-modal-overlay hidden" id="share-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+          <div class="share-modal">
+            <h3 id="share-modal-title">🔗 Compartir mi resultado</h3>
+            <p>Copia el siguiente texto y compártelo donde quieras:</p>
+            <div class="share-text-box" id="share-text-content"></div>
+            <div class="share-modal-actions">
+              <button class="btn btn-primary" id="btn-copy-share" aria-label="Copiar texto al portapapeles">📋 Copiar texto</button>
+              <button class="btn btn-outline" id="btn-close-share" aria-label="Cerrar ventana de compartir">Cerrar</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/quiz.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    "use strict";
+    const user = Auth.requireAuth("../index.html");
+    const resultados = Quiz.getResultados();
+    if (!resultados) { Nav.go("eleccion.html", 0); throw new Error("Sin resultados — redirigiendo"); }
+
+    const flujo = resultados.flujo;
+    const pct   = resultados.porcentaje;
+    const cal   = resultados.califica;
+    const area  = resultados.area;
+    const principal = resultados.principal;
+
+    // ---- Hero ----
+    document.getElementById("hero-label").textContent = flujo === "Estudio" ? "🎓 RESULTADO: ESTUDIO" : "💼 RESULTADO: TRABAJO";
+    document.getElementById("score-pct-big").textContent = pct + "%";
+    document.getElementById("score-announce").textContent = `Obtuviste ${pct}% de aciertos.`;
+    document.getElementById("hero-area-title").textContent = area ? area.nombre : "Área Vocacional";
+    document.getElementById("hero-subtitle").textContent = principal
+      ? (flujo === "Estudio" ? `Carrera recomendada: ${principal.nombre}` : `Puesto recomendado: ${principal.titulo}`)
+      : "Ver resultados abajo";
+
+    // Colorear hero según resultado
+    const heroEl = document.querySelector(".results-hero");
+    if (heroEl && !cal) {
+      heroEl.style.background = "linear-gradient(135deg, var(--color-danger) 0%, #F08080 100%)";
+    }
+
+    // ---- Veredicto ----
+    const verdictEl = document.getElementById("verdict-section");
+    verdictEl.innerHTML = `
+      <div class="verdict-card ${cal ? 'pass' : 'fail'} animate-fade-in-up">
+        <span class="verdict-icon" aria-hidden="true">${cal ? '🎉' : '💪'}</span>
+        <h2 class="verdict-title">
+          ${cal
+            ? (flujo === "Estudio" ? '¡CALIFICA para esta carrera!' : '¡CALIFICA para este trabajo!')
+            : (flujo === "Estudio" ? 'Aún no califica — pero tienes opciones' : 'Aún no califica — sigue adelante')}
+        </h2>
+        ${principal ? `<span class="recommended-name">${principal.nombre || principal.titulo}</span>` : ""}
+        <p class="verdict-desc">
+          ${cal
+            ? `Con ${pct}% de aciertos, tienes muy buenas bases para iniciar en este campo. 
+               ${flujo === "Estudio" 
+                 ? "Te recomendamos explorar las universidades que ofrecen esta carrera en tu ciudad." 
+                 : "Revisa las empresas donde puedes aplicar en tu ciudad."}`
+            : `Obtuviste ${pct}% en esta evaluación. Recuerda que este resultado es orientativo — 
+               con preparación y práctica puedes alcanzar tu meta. Revisa también las otras opciones similares.`}
+        </p>
+        ${principal && principal.descripcion ? `
+          <p style="font-size:var(--font-size-sm); color:var(--color-text-muted); margin-top:var(--space-4);
+                     background:var(--color-surface); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4);">
+            ${principal.descripcion}
+          </p>` : ""}
+      </div>
+    `;
+
+    // ---- Métricas ----
+    const totalPreguntas = resultados.detalle.length;
+    const correctas = resultados.detalle.filter(d => d.tipo === "opcion_multiple" && d.esCorrecta).length;
+    const incorrectas = resultados.detalle.filter(d => d.tipo === "opcion_multiple" && !d.esCorrecta).length;
+    const libres = resultados.detalle.filter(d => d.tipo === "texto_libre").length;
+
+    const metricsGrid = document.getElementById("metrics-grid");
+    metricsGrid.innerHTML = `
+      <div class="result-metric">
+        <p class="metric-value">${pct}%</p>
+        <p class="metric-label">Puntaje total</p>
+      </div>
+      <div class="result-metric">
+        <p class="metric-value" style="color:var(--color-success)">${correctas}</p>
+        <p class="metric-label">Correctas</p>
+      </div>
+      <div class="result-metric">
+        <p class="metric-value" style="color:var(--color-danger)">${incorrectas}</p>
+        <p class="metric-label">Incorrectas</p>
+      </div>
+    `;
+
+    // ---- Ubicaciones ----
+    const locTitle = document.getElementById("locations-title");
+    locTitle.innerHTML = flujo === "Estudio"
+      ? `<span>🏛️</span>Universidades en tu ciudad`
+      : `<span>🏢</span>Empresas donde puedes aplicar`;
+
+    const locGrid = document.getElementById("locations-grid");
+    if (resultados.ubicaciones && resultados.ubicaciones.length > 0) {
+      resultados.ubicaciones.forEach(loc => {
+        const card = document.createElement("article");
+        card.className = "location-card";
+        if (flujo === "Estudio") {
+          card.innerHTML = `
+            <p class="location-name">🏛️ ${loc.nombre}</p>
+            <p class="location-address">📍 ${loc.direccion}</p>
+            <div style="display:flex; gap:var(--space-2); flex-wrap:wrap; margin-top:var(--space-2);">
+              <span class="badge badge-study">${loc.tipo}</span>
+              ${loc.ofrece_becas ? '<span class="badge badge-pass">🎓 Becas</span>' : ''}
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <p class="location-name">🏢 ${loc.nombre}</p>
+            <p class="location-address">📍 ${loc.direccion || loc.ubicacion}</p>
+          `;
+        }
+        locGrid.appendChild(card);
+      });
+    } else {
+      locGrid.innerHTML = `
+        <div class="card" style="grid-column:1/-1; text-align:center; color:var(--color-text-muted);">
+          <p>No encontramos ubicaciones en tu ciudad para esta opción. Prueba con ciudades cercanas.</p>
+        </div>
+      `;
+    }
+
+    // ---- Ver otras opciones ----
+    const toggleBtn     = document.getElementById("toggle-similares");
+    const similContent  = document.getElementById("similares-content");
+
+    if (resultados.similares && resultados.similares.length > 0) {
+      const html = resultados.similares.map(s => `
+        <div class="similar-card">
+          <span class="similar-icon" aria-hidden="true">${s.area ? s.area.icon : "📌"}</span>
+          <div>
+            <p class="similar-name">${s.nombre || s.titulo}</p>
+            <p class="similar-area">${s.area ? s.area.nombre : ""}</p>
+            ${s.descripcion ? `<p class="similar-desc">${s.descripcion}</p>` : ""}
+          </div>
+        </div>
+      `).join("");
+      similContent.innerHTML = html;
+
+      toggleBtn.addEventListener("click", () => {
+        const isOpen = similContent.classList.contains("open");
+        similContent.classList.toggle("open", !isOpen);
+        toggleBtn.classList.toggle("open", !isOpen);
+        toggleBtn.setAttribute("aria-expanded", !isOpen);
+      });
+    } else {
+      toggleBtn.style.display = "none";
+    }
+
+    // ---- Detalle de respuestas ----
+    const detailList = document.getElementById("detail-list");
+    resultados.detalle.forEach((item, idx) => {
+      const el = document.createElement("div");
+      if (item.tipo === "opcion_multiple") {
+        el.className = `detail-item ${item.esCorrecta ? 'correct' : 'incorrect'}`;
+        el.innerHTML = `
+          <span class="detail-badge ${item.esCorrecta ? 'pass' : 'fail'}">
+            ${item.esCorrecta ? '✓ Correcta' : '✗ Incorrecta'}
+          </span>
+          <p class="detail-q">${idx + 1}. ${item.texto}</p>
+          <p class="detail-answer">
+            <strong>Tu respuesta:</strong>
+            ${item.opciones[item.respuestaUsuario] || "—"}
+          </p>
+          ${!item.esCorrecta ? `
+            <p class="detail-correct-ans">
+              ✓ Respuesta correcta: ${item.opciones[item.respuestaCorrecta]}
+            </p>` : ""}
+        `;
+      } else {
+        el.className = "detail-item libre";
+        const palabras = item.respuestaUsuario ? item.respuestaUsuario.trim().split(/\s+/).filter(w=>w.length>0).length : 0;
+        el.innerHTML = `
+          <span class="detail-badge libre">💬 Respuesta libre</span>
+          <p class="detail-q">${idx + 1}. ${item.texto}</p>
+          <p class="detail-answer">
+            <strong>Tu respuesta:</strong> ${item.respuestaUsuario || "Sin respuesta"}
+          </p>
+          <p style="font-size:var(--font-size-xs); color:var(--color-text-muted); margin-top:var(--space-1);">
+            ${palabras} palabras — ${item.puntoParcial}% de aporte al puntaje
+          </p>
+        `;
+      }
+      detailList.appendChild(el);
+    });
+
+    // ---- Botón PDF ----
+    document.getElementById("btn-download-pdf").addEventListener("click", async () => {
+      const btn = document.getElementById("btn-download-pdf");
+      btn.disabled = true;
+      btn.textContent = "⏳ Generando PDF...";
+      try {
+        await PDFGen.generate(resultados, user);
+        Toast.show("PDF generado y descargado correctamente. ✅", "success");
+      } catch (err) {
+        Toast.show("Error al generar el PDF. Intenta de nuevo.", "error");
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "📄 Descargar PDF";
+      }
+    });
+
+    // ---- Nuevo test ----
+    document.getElementById("btn-new-test").addEventListener("click", () => {
+      Quiz.cancelar();
+      Nav.go("eleccion.html");
+    });
+
+    // ---- Compartir resultado ----
+    document.getElementById("btn-share").addEventListener("click", async () => {
+      const tipoEmoji   = flujo === "Estudio" ? "🎓" : "💼";
+      const areaTexto   = area ? area.nombre : "Área Vocacional";
+      const principalTx = principal
+        ? (flujo === "Estudio" ? `Carrera: ${principal.nombre}` : `Puesto: ${principal.titulo}`)
+        : "";
+      const veredicto   = cal ? "✅ ¡Calificó!" : "⚠️ No calificó";
+      const shareText   = `${tipoEmoji} Acabo de completar mi orientación vocacional en Camina hacia el Futuro.\n\n` +
+                          `📊 Puntaje: ${pct}%  ${veredicto}\n` +
+                          `🗂️ Área: ${areaTexto}\n` +
+                          (principalTx ? `🏅 ${principalTx}\n` : "") +
+                          `\n🚀 ¡Tú también puedes descubrir tu vocación!`;
+
+      // Intentar Web Share API (móvil/Chrome Android)
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "Mi resultado vocacional — Camina hacia el Futuro", text: shareText });
+          Toast.show("¡Contenido compartido correctamente! 🎉", "success");
+          return;
+        } catch (err) {
+          if (err.name === "AbortError") return; // Usuario canceló
+        }
+      }
+
+      // Fallback: modal con copia al portapapeles
+      document.getElementById("share-text-content").textContent = shareText;
+      document.getElementById("share-modal-overlay").classList.remove("hidden");
+      document.getElementById("btn-copy-share").focus();
+    });
+
+    // Copiar al portapapeles desde el modal
+    document.getElementById("btn-copy-share").addEventListener("click", async () => {
+      const txt = document.getElementById("share-text-content").textContent;
+      try {
+        await navigator.clipboard.writeText(txt);
+        Toast.show("¡Texto copiado al portapapeles! ✅", "success");
+        document.getElementById("share-modal-overlay").classList.add("hidden");
+      } catch {
+        // Fallback para entornos sin clipboard API
+        const ta = document.createElement("textarea");
+        ta.value = txt;
+        ta.style.cssText = "position:fixed;opacity:0;";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        Toast.show("¡Texto copiado! ✅", "success");
+        document.getElementById("share-modal-overlay").classList.add("hidden");
+      }
+    });
+
+    // Cerrar modal de compartir
+    document.getElementById("btn-close-share").addEventListener("click", () => {
+      document.getElementById("share-modal-overlay").classList.add("hidden");
+    });
+    document.getElementById("share-modal-overlay").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) document.getElementById("share-modal-overlay").classList.add("hidden");
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") document.getElementById("share-modal-overlay").classList.add("hidden");
+    });
+  </script>
+</body>
+</html>

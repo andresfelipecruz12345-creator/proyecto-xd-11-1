@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Cuestionario final de evaluación de aptitudes vocacionales.">
+  <title>Camina hacia el Futuro — Cuestionario Final</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .quiz-wrapper { min-height: 100vh; background: var(--color-bg); padding-top: var(--header-height); }
+
+    .quiz-header-bar {
+      position: sticky;
+      top: var(--header-height);
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-4) var(--space-6);
+      z-index: 100;
+    }
+    .quiz-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2); }
+    .quiz-title { font-weight: var(--font-weight-bold); color: var(--color-text-primary); font-size: var(--font-size-md); }
+    .quiz-counter { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+
+    .area-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      padding: var(--space-2) var(--space-4);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-primary);
+      margin-bottom: var(--space-4);
+    }
+
+    .quiz-body {
+      max-width: var(--max-width-quiz);
+      margin: 0 auto;
+      padding: var(--space-6) var(--space-4) var(--space-16);
+    }
+
+    .question-block {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      margin-bottom: var(--space-5);
+      transition: border-color var(--transition-fast);
+    }
+    .question-block.has-error { border-color: var(--color-danger); }
+    .question-block.answered  { border-color: var(--color-success); }
+
+    .question-number { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: var(--space-2); }
+    .question-text   { font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); line-height: var(--line-height-normal); margin-bottom: var(--space-4); }
+
+    /* Tipo entrevista (texto libre) */
+    .answer-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: var(--space-3) var(--space-4);
+      background: var(--color-surface-alt);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text-primary);
+      font-family: var(--font-family);
+      font-size: var(--font-size-md);
+      resize: vertical;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      line-height: var(--line-height-normal);
+    }
+    .answer-textarea::placeholder { color: var(--color-text-muted); }
+    .answer-textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(124,92,191,0.13);
+    }
+    .char-counter {
+      text-align: right;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+      margin-top: var(--space-1);
+    }
+    .char-counter.enough { color: var(--color-success); }
+
+    .interview-label {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: var(--color-surface-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-2) var(--space-3);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-3);
+    }
+
+    .options-list { display: flex; flex-direction: column; gap: var(--space-2); }
+
+    .quiz-actions {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      z-index: 150;
+      box-shadow: 0 -4px 16px var(--color-shadow);
+    }
+    .quiz-actions-left  { display: flex; gap: var(--space-2); align-items: center; }
+    .quiz-actions-right { display: flex; gap: var(--space-3); align-items: center; }
+    .progress-float { font-size: var(--font-size-sm); color: var(--color-text-secondary); white-space: nowrap; }
+
+    .validation-banner {
+      background: var(--color-danger-light);
+      border: 1px solid var(--color-danger);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      color: var(--color-danger);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      margin-bottom: var(--space-5);
+      display: none;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .validation-banner.visible { display: flex; }
+
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--color-surface);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      max-width: 400px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      animation: fadeInUp 0.3s ease;
+    }
+    .modal-title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3); }
+    .modal-desc  { color: var(--color-text-secondary); margin-bottom: var(--space-6); }
+    .modal-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+    .modal-actions .btn { flex: 1; }
+
+    /* =====================================================
+       RESPONSIVE — MÓVIL
+    ===================================================== */
+    @media (max-width: 640px) {
+      /* Cuerpo del quiz */
+      .quiz-body {
+        padding: var(--space-4) var(--space-3) 110px;
+      }
+      .question-block {
+        padding: var(--space-4);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-3);
+      }
+      .question-text {
+        font-size: var(--font-size-base, 0.95rem);
+        line-height: 1.5;
+      }
+
+      /* Sub-header más compacto */
+      .quiz-header-bar { padding: var(--space-3) var(--space-4); }
+      .quiz-meta { gap: var(--space-1); }
+      .quiz-title { font-size: var(--font-size-sm); }
+      .quiz-counter { font-size: var(--font-size-xs); }
+
+      /* Footer fijo: soporte notch iOS */
+      .quiz-actions {
+        padding: var(--space-3) var(--space-4);
+        padding-bottom: max(var(--space-3), env(safe-area-inset-bottom, var(--space-3)));
+        flex-wrap: wrap;
+        gap: var(--space-2);
+      }
+      .quiz-actions-left  { gap: var(--space-1); }
+      .quiz-actions-right { gap: var(--space-2); width: 100%; justify-content: flex-end; }
+
+      /* Botón Cancelar: solo icono */
+      .btn-cancel-quiz {
+        min-width: 40px;
+        padding: var(--space-2) var(--space-3);
+        font-size: 0;
+        overflow: hidden;
+      }
+      .btn-cancel-quiz::before { content: "✕"; font-size: var(--font-size-md); }
+
+      /* Textarea: ajuste de tamaño para no tapar el footer */
+      .answer-textarea {
+        min-height: 80px;
+        max-height: 200px;
+        font-size: var(--font-size-sm);
+      }
+
+      /* Touch targets mínimos de 44 px */
+      .option-card, .btn {
+        min-height: 44px;
+      }
+      .option-card {
+        padding: var(--space-3) var(--space-4);
+      }
+
+      /* Progress float: ocultar en móvil */
+      .progress-float { display: none; }
+
+      /* Chip de área */
+      .area-chip { font-size: var(--font-size-xs); padding: var(--space-1) var(--space-3); }
+    }
+
+    @media (max-width: 380px) {
+      .quiz-actions-right .btn { padding: var(--space-2) var(--space-3); font-size: var(--font-size-sm); }
+    }
+
+    /* Scroll suave en iOS */
+    .quiz-body { -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading-overlay">
+    <p class="loading-text">Cargando</p>
+    <div class="loading-dots">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+  </div>
+
+  <div class="quiz-wrapper">
+    <header class="app-header">
+      <a href="eleccion.html" class="logo" aria-label="Inicio">
+        <span class="logo-icon" aria-hidden="true">🚀</span>
+        <span class="logo-text">Camina hacia el <span>Futuro</span></span>
+      </a>
+      <div class="header-actions">
+        <span id="flujo-badge" class="badge"></span>
+        <a href="perfil.html" class="btn btn-ghost btn-sm" aria-label="Ver mi perfil" title="Mi Perfil" style="padding:var(--space-2) var(--space-3);">
+          👤
+        </a>
+        <button class="theme-toggle" aria-label="Cambiar tema">
+          <span class="theme-icon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="quiz-header-bar" role="region" aria-label="Progreso del cuestionario final">
+      <div class="quiz-meta">
+        <span class="quiz-title">📊 SECCIÓN 2: Cuestionario Final</span>
+        <span class="quiz-counter" id="progress-counter" aria-live="polite">0 / 30 respondidas</span>
+      </div>
+      <div class="progress-label">
+        <span>Sección 2 de 2</span>
+        <span id="pct-label" aria-hidden="true">0%</span>
+      </div>
+      <div class="progress-bar-wrapper" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="main-progress">
+        <div class="progress-bar" id="progress-fill" style="width:0%; background:linear-gradient(90deg,var(--color-work-dark),var(--color-study));"></div>
+      </div>
+    </div>
+
+    <div style="max-width:var(--max-width-quiz); margin:0 auto; padding:var(--space-5) var(--space-4) 0;">
+      <nav class="stepper" aria-label="Pasos del test">
+        <div class="step-item done" id="step1">
+          <div class="step-circle">✓</div>
+          <span class="step-label">Generales</span>
+        </div>
+        <div class="step-connector done" id="conn1"></div>
+        <div class="step-item active" id="step2">
+          <div class="step-circle">2</div>
+          <span class="step-label">Final</span>
+        </div>
+        <div class="step-connector" id="conn2"></div>
+        <div class="step-item" id="step3">
+          <div class="step-circle">3</div>
+          <span class="step-label">Resultados</span>
+        </div>
+      </nav>
+    </div>
+
+    <main class="quiz-body" id="quiz-body">
+      <div id="area-info" style="margin-bottom:var(--space-5);"></div>
+      <div class="validation-banner" id="validation-banner" role="alert" aria-live="assertive">
+        <span>⚠️</span>
+        <span id="validation-msg">Por favor responde todas las preguntas antes de ver tus resultados.</span>
+      </div>
+      <div id="questions-container"></div>
+    </main>
+
+    <footer class="quiz-actions" role="navigation" aria-label="Controles del cuestionario final">
+      <div class="quiz-actions-left">
+        <button class="btn btn-ghost btn-sm btn-cancel-quiz" id="btn-cancel" aria-label="Cancelar test">
+          ✖ Cancelar
+        </button>
+        <a href="preguntas-generales.html" class="btn btn-ghost btn-sm" aria-label="Volver a preguntas generales">
+          ← Volver
+        </a>
+      </div>
+      <div class="quiz-actions-right">
+        <span class="progress-float" id="action-counter" aria-live="polite">0/30</span>
+        <button class="btn btn-primary btn-lg" id="btn-results" aria-label="Ver mis resultados">
+          Mostrar Resultados 🏆
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <div class="modal-overlay" id="modal-cancel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <h2 class="modal-title" id="modal-title">⚠️ ¿Cancelar el test?</h2>
+      <p class="modal-desc">Si cancelas perderás todas tus respuestas. ¿Estás seguro/a?</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="modal-no">No, continuar</button>
+        <button class="btn btn-danger"  id="modal-yes">Sí, cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/quiz.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    "use strict";
+    const user  = Auth.requireAuth("../index.html");
+    const state = Quiz.getState();
+    if (!state || state.fase !== "final") { Nav.go("preguntas-generales.html", 0); throw new Error("Sin estado final — redirigiendo"); }
+
+    const flujo         = Quiz.getFlujo();
+    const cuestionario  = Quiz.getCuestionarioFinal();
+    const preguntas     = cuestionario ? cuestionario.preguntas : [];
+    const totalQ        = preguntas.length;
+    const areaId        = Quiz.getArea();
+    const area          = window.APP_DATA.AREAS.find(a => a.id === areaId);
+
+    // Badge
+    const badge = document.getElementById("flujo-badge");
+    if (badge) {
+      badge.className  = flujo === "Estudio" ? "badge badge-study" : "badge badge-work";
+      badge.textContent = flujo === "Estudio" ? "🎓 ESTUDIO" : "💼 TRABAJO";
+    }
+
+    // Info de área
+    const areaInfo = document.getElementById("area-info");
+    if (area && areaInfo) {
+      areaInfo.innerHTML = `
+        <div class="area-chip">
+          <span aria-hidden="true">${area.icon}</span>
+          <span>Área detectada: <strong>${area.nombre}</strong></span>
+        </div>
+        <h2 style="font-size:var(--font-size-xl); font-weight:var(--font-weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-2);">
+          ${cuestionario.titulo}
+        </h2>
+        <p style="color:var(--color-text-secondary); font-size:var(--font-size-sm); margin-bottom:var(--space-6);">
+          ${flujo === "Estudio"
+            ? "Responde con honestidad. Las preguntas evalúan tu aptitud para esta área de estudio."
+            : "Responde como si fuera una entrevista de trabajo real. Sé auténtico/a en tus respuestas."}
+        </p>
+      `;
+    }
+
+    // Render preguntas
+    const container = document.getElementById("questions-container");
+
+    function renderPreguntas() {
+      const respuestas = Quiz.getRespuestasFinal();
+      container.innerHTML = "";
+
+      preguntas.forEach((pregunta, idx) => {
+        const block = document.createElement("article");
+        block.className = "question-block animate-fade-in";
+        block.id = `block-${pregunta.id}`;
+        block.setAttribute("data-pregunta-id", pregunta.id);
+
+        const respActual = respuestas[pregunta.id];
+        const respondida = respActual !== undefined && respActual !== null && respActual !== "";
+
+        if (respondida) block.classList.add("answered");
+
+        let contenidoOpciones = "";
+        if (pregunta.tipo === "opcion_multiple") {
+          contenidoOpciones = `
+            <div class="options-list" role="radiogroup" aria-label="Opciones pregunta ${idx + 1}">
+              ${pregunta.opciones.map((op, opIdx) => `
+                <label class="option-card ${respondida && respActual === opIdx ? 'selected' : ''}"
+                       for="opt-${pregunta.id}-${opIdx}">
+                  <input
+                    type="radio"
+                    id="opt-${pregunta.id}-${opIdx}"
+                    name="q-${pregunta.id}"
+                    value="${opIdx}"
+                    class="visually-hidden"
+                    ${respondida && respActual === opIdx ? 'checked' : ''}
+                  >
+                  <span class="option-indicator" aria-hidden="true"></span>
+                  <span class="option-text">${op}</span>
+                </label>
+              `).join("")}
+            </div>
+          `;
+        } else {
+          // Tipo texto libre (entrevista)
+          const minW = pregunta.minPalabras || 8;
+          const valActual = respActual || "";
+          const palabrasActuales = valActual.trim().split(/\s+/).filter(w => w.length > 0).length;
+          contenidoOpciones = `
+            <div class="interview-label">
+              <span>💬</span>
+              <span>Responde con al menos ${minW} palabras</span>
+            </div>
+            <textarea
+              class="answer-textarea"
+              id="textarea-${pregunta.id}"
+              name="q-${pregunta.id}"
+              placeholder="Escribe tu respuesta aquí..."
+              minlength="1"
+              aria-label="Respuesta a pregunta ${idx + 1}"
+            >${valActual}</textarea>
+            <p class="char-counter ${palabrasActuales >= minW ? 'enough' : ''}" id="counter-${pregunta.id}" aria-live="polite">
+              ${palabrasActuales} / ${minW} palabras ${palabrasActuales >= minW ? '✓' : ''}
+            </p>
+          `;
+        }
+
+        block.innerHTML = `
+          <p class="question-number">Pregunta ${idx + 1} de ${totalQ}</p>
+          <p class="question-text">${pregunta.texto}</p>
+          ${contenidoOpciones}
+          <div class="question-error" id="qerr-${pregunta.id}" role="alert">
+            ${pregunta.tipo === "opcion_multiple"
+              ? "⚠️ Por favor selecciona una opción de respuesta."
+              : `⚠️ Por favor escribe al menos ${pregunta.minPalabras || 8} palabras en tu respuesta.`}
+          </div>
+        `;
+        container.appendChild(block);
+      });
+
+      // Eventos radio
+      container.querySelectorAll("input[type='radio']").forEach(input => {
+        input.addEventListener("change", handleRadioChange);
+      });
+      // Eventos textarea
+      container.querySelectorAll(".answer-textarea").forEach(textarea => {
+        textarea.addEventListener("input", handleTextareaInput);
+      });
+    }
+
+    function handleRadioChange(e) {
+      const input     = e.target;
+      const pregId    = input.name.replace("q-", "");
+      const opcionIdx = parseInt(input.value, 10);
+
+      Quiz.guardarRespuestaFinal(pregId, opcionIdx);
+
+      const block = document.getElementById(`block-${pregId}`);
+      if (block) {
+        block.querySelectorAll(".option-card").forEach((card, idx) => {
+          card.classList.toggle("selected", idx === opcionIdx);
+        });
+        block.classList.add("answered");
+        block.classList.remove("has-error");
+        const errEl = document.getElementById(`qerr-${pregId}`);
+        if (errEl) errEl.classList.remove("visible");
+      }
+      updateProgress();
+    }
+
+    function handleTextareaInput(e) {
+      const ta     = e.target;
+      const pregId = ta.id.replace("textarea-", "");
+      const valor  = ta.value;
+      const pregunta = preguntas.find(p => p.id === pregId);
+      const minW   = pregunta ? pregunta.minPalabras || 8 : 8;
+      const palabras = valor.trim().split(/\s+/).filter(w => w.length > 0).length;
+
+      Quiz.guardarRespuestaFinal(pregId, valor);
+
+      const counterEl = document.getElementById(`counter-${pregId}`);
+      if (counterEl) {
+        counterEl.textContent = `${palabras} / ${minW} palabras ${palabras >= minW ? '✓' : ''}`;
+        counterEl.classList.toggle("enough", palabras >= minW);
+      }
+
+      const block = document.getElementById(`block-${pregId}`);
+      if (block) {
+        block.classList.toggle("answered",   palabras >= minW);
+        block.classList.toggle("has-error",  false);
+        const errEl = document.getElementById(`qerr-${pregId}`);
+        if (errEl && palabras >= minW) errEl.classList.remove("visible");
+      }
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const respuestas = Quiz.getRespuestasFinal();
+      let count = 0;
+      preguntas.forEach(p => {
+        const r = respuestas[p.id];
+        if (p.tipo === "texto_libre") {
+          const palabras = r ? r.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+          if (palabras >= (p.minPalabras || 1)) count++;
+        } else {
+          if (r !== undefined && r !== null) count++;
+        }
+      });
+      const pct = Math.round((count / totalQ) * 100);
+      document.getElementById("progress-fill").style.width  = pct + "%";
+      document.getElementById("main-progress").setAttribute("aria-valuenow", pct);
+      document.getElementById("pct-label").textContent      = pct + "%";
+      document.getElementById("progress-counter").textContent = `${count} / ${totalQ} respondidas`;
+      document.getElementById("action-counter").textContent   = `${count}/${totalQ}`;
+    }
+
+    // Botón mostrar resultados
+    document.getElementById("btn-results").addEventListener("click", () => {
+      const validacion = Quiz.validarFinal();
+      if (!validacion.ok) {
+        validacion.faltantes.forEach(pid => {
+          const block = document.getElementById(`block-${pid}`);
+          if (block) {
+            block.classList.add("has-error");
+            const errEl = document.getElementById(`qerr-${pid}`);
+            if (errEl) errEl.classList.add("visible");
+          }
+        });
+        const banner = document.getElementById("validation-banner");
+        const msg    = document.getElementById("validation-msg");
+        banner.classList.add("visible");
+        msg.textContent = `Faltan ${validacion.faltantes.length} respuesta(s). Por favor complétalas.`;
+        const first = document.getElementById(`block-${validacion.faltantes[0]}`);
+        if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      document.getElementById("validation-banner").classList.remove("visible");
+      Loading.show();
+      const res = Quiz.calcularResultados();
+      if (res && res.ok) {
+        setTimeout(() => Nav.go("resultados.html"), 400);
+      } else {
+        Loading.hide();
+        alert("Error calculando resultados. Intenta de nuevo.");
+      }
+    });
+
+    // Modal cancelar
+    const modal = document.getElementById("modal-cancel");
+    document.getElementById("btn-cancel").addEventListener("click", () => modal.classList.add("open"));
+    document.getElementById("modal-no").addEventListener("click",  () => modal.classList.remove("open"));
+    document.getElementById("modal-yes").addEventListener("click", () => { Quiz.cancelar(); Nav.go("eleccion.html"); });
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+
+    renderPreguntas();
+    updateProgress();
+  </script>
+</body>
+</html>

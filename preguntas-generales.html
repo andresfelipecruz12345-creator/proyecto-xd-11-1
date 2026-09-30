@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Preguntas generales del cuestionario vocacional.">
+  <title>Camina hacia el Futuro — Preguntas Generales</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .quiz-wrapper { min-height: 100vh; background: var(--color-bg); padding-top: var(--header-height); }
+
+    .quiz-header-bar {
+      position: sticky;
+      top: var(--header-height);
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-4) var(--space-6);
+      z-index: 100;
+    }
+    .quiz-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2); }
+    .quiz-title { font-weight: var(--font-weight-bold); color: var(--color-text-primary); font-size: var(--font-size-md); }
+    .quiz-counter { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+
+    .quiz-body { max-width: var(--max-width-quiz); margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-16); }
+
+    .question-block { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-6); margin-bottom: var(--space-5); transition: border-color var(--transition-fast); }
+    .question-block.has-error { border-color: var(--color-danger); }
+    .question-block.answered  { border-color: var(--color-success); }
+
+    .question-number { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: var(--space-2); }
+    .question-text { font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); line-height: var(--line-height-normal); margin-bottom: var(--space-4); }
+    .options-list { display: flex; flex-direction: column; gap: var(--space-2); }
+
+    .quiz-actions {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      padding: var(--space-4) var(--space-6);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-3); z-index: 150;
+      box-shadow: 0 -4px 16px var(--color-shadow);
+    }
+    .quiz-actions-left  { display: flex; gap: var(--space-2); align-items: center; }
+    .quiz-actions-right { display: flex; gap: var(--space-3); align-items: center; }
+    .progress-float { font-size: var(--font-size-sm); color: var(--color-text-secondary); white-space: nowrap; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: none; align-items: center; justify-content: center; padding: var(--space-4); }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--color-surface); border-radius: var(--radius-xl); padding: var(--space-8); max-width: 400px; width: 100%; box-shadow: var(--shadow-lg); animation: fadeInUp 0.3s ease; }
+    .modal-title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); margin-bottom: var(--space-3); }
+    .modal-desc  { color: var(--color-text-secondary); margin-bottom: var(--space-6); }
+    .modal-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+    .modal-actions .btn { flex: 1; }
+
+    .validation-banner { background: var(--color-danger-light); border: 1px solid var(--color-danger); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); color: var(--color-danger); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); margin-bottom: var(--space-5); display: none; align-items: center; gap: var(--space-2); }
+    .validation-banner.visible { display: flex; }
+
+    @media (max-width: 640px) {
+      .quiz-body { padding: var(--space-4) var(--space-3) 110px; }
+      .question-block { padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-3); }
+      .question-text { font-size: var(--font-size-base, 0.95rem); line-height: 1.5; }
+      .quiz-header-bar { padding: var(--space-3) var(--space-4); }
+      .quiz-meta { gap: var(--space-1); }
+      .quiz-title { font-size: var(--font-size-sm); }
+      .quiz-counter { font-size: var(--font-size-xs); }
+      .quiz-actions { padding: var(--space-3) var(--space-4); padding-bottom: max(var(--space-3), env(safe-area-inset-bottom, var(--space-3))); flex-wrap: wrap; gap: var(--space-2); }
+      .quiz-actions-left  { gap: var(--space-1); }
+      .quiz-actions-right { gap: var(--space-2); width: 100%; justify-content: flex-end; }
+      .btn-cancel-quiz { min-width: 40px; padding: var(--space-2) var(--space-3); font-size: 0; overflow: hidden; }
+      .btn-cancel-quiz::before { content: "✕"; font-size: var(--font-size-md); }
+      .option-card, .btn { min-height: 44px; }
+      .option-card { padding: var(--space-3) var(--space-4); }
+      .progress-float { display: none; }
+    }
+    @media (max-width: 380px) {
+      .quiz-actions-right .btn { padding: var(--space-2) var(--space-3); font-size: var(--font-size-sm); }
+    }
+    .quiz-body { -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading-overlay">
+    <p class="loading-text">Cargando</p>
+    <div class="loading-dots">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+  </div>
+
+  <div class="quiz-wrapper">
+    <header class="app-header">
+      <a href="eleccion.html" class="logo" aria-label="Cambiar opción">
+        <span class="logo-icon" aria-hidden="true">🚀</span>
+        <span class="logo-text">Camina hacia el <span>Futuro</span></span>
+      </a>
+      <div class="header-actions">
+        <span id="flujo-badge" class="badge"></span>
+        <a href="perfil.html" class="btn btn-ghost btn-sm" aria-label="Ver mi perfil" title="Mi Perfil" style="padding:var(--space-2) var(--space-3);">👤</a>
+        <button class="theme-toggle" aria-label="Cambiar tema"><span class="theme-icon">🌙</span></button>
+      </div>
+    </header>
+
+    <div class="quiz-header-bar" role="region" aria-label="Progreso del cuestionario">
+      <div class="quiz-meta">
+        <span class="quiz-title" id="section-title">📋 SECCIÓN 1: Preguntas Generales</span>
+        <span class="quiz-counter" id="progress-counter" aria-live="polite">0 / 20 respondidas</span>
+      </div>
+      <div class="progress-label">
+        <span>Sección 1 de 2</span>
+        <span id="pct-label" aria-hidden="true">0%</span>
+      </div>
+      <div class="progress-bar-wrapper" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="main-progress">
+        <div class="progress-bar" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div style="max-width:var(--max-width-quiz); margin:0 auto; padding:var(--space-5) var(--space-4) 0;">
+      <nav class="stepper" aria-label="Pasos del test">
+        <div class="step-item active" id="step1"><div class="step-circle">1</div><span class="step-label">Generales</span></div>
+        <div class="step-connector" id="conn1"></div>
+        <div class="step-item" id="step2"><div class="step-circle">2</div><span class="step-label">Final</span></div>
+        <div class="step-connector" id="conn2"></div>
+        <div class="step-item" id="step3"><div class="step-circle">3</div><span class="step-label">Resultados</span></div>
+      </nav>
+    </div>
+
+    <main class="quiz-body" id="quiz-body">
+      <div class="validation-banner" id="validation-banner" role="alert" aria-live="assertive">
+        <span>⚠️</span>
+        <span id="validation-msg">Por favor responde todas las preguntas antes de continuar.</span>
+      </div>
+      <div id="questions-container"></div>
+    </main>
+
+    <footer class="quiz-actions" role="navigation" aria-label="Controles del test">
+      <div class="quiz-actions-left">
+        <button class="btn btn-ghost btn-sm btn-cancel-quiz" id="btn-cancel" aria-label="Cancelar y reiniciar test">✖ Cancelar</button>
+        <a href="eleccion.html" class="btn btn-ghost btn-sm" aria-label="Volver a elegir Estudio o Trabajo">← Cambiar opción</a>
+      </div>
+      <div class="quiz-actions-right">
+        <span class="progress-float" id="action-counter" aria-live="polite">0/20</span>
+        <button class="btn btn-primary btn-lg" id="btn-next" aria-label="Ir al cuestionario final">Siguiente página →</button>
+      </div>
+    </footer>
+  </div>
+
+  <div class="modal-overlay" id="modal-cancel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <h2 class="modal-title" id="modal-title">⚠️ ¿Cancelar el test?</h2>
+      <p class="modal-desc">Si cancelas, perderás todas tus respuestas actuales y deberás empezar desde cero. ¿Estás seguro/a?</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="modal-no" aria-label="No cancelar, continuar respondiendo">No, continuar</button>
+        <button class="btn btn-danger"  id="modal-yes" aria-label="Sí, cancelar el test">Sí, cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/quiz.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    "use strict";
+    const user  = Auth.requireAuth("../index.html");
+    const state = Quiz.getState();
+    if (!state) { Nav.go("eleccion.html", 0); throw new Error("Sin estado — redirigiendo"); }
+
+    const flujo    = Quiz.getFlujo();
+    const preguntas = Quiz.getPreguntasGenerales();
+    const totalQ   = preguntas.length;
+
+    const badge = document.getElementById("flujo-badge");
+    if (badge) {
+      badge.className   = flujo === "Estudio" ? "badge badge-study" : "badge badge-work";
+      badge.textContent = flujo === "Estudio" ? "🎓 ESTUDIO" : "💼 TRABAJO";
+    }
+
+    const container = document.getElementById("questions-container");
+
+    function renderPreguntas() {
+      const respuestas = Quiz.getRespuestasGenerales();
+      container.innerHTML = "";
+      preguntas.forEach((pregunta, idx) => {
+        const block = document.createElement("article");
+        block.className = "question-block animate-fade-in";
+        block.id = `block-${pregunta.id}`;
+        block.setAttribute("data-pregunta-id", pregunta.id);
+        const respondida = respuestas[pregunta.id] !== undefined;
+        if (respondida) block.classList.add("answered");
+        block.innerHTML = `
+          <p class="question-number">Pregunta ${idx + 1} de ${totalQ}</p>
+          <p class="question-text">${pregunta.texto}</p>
+          <div class="options-list" role="radiogroup" aria-label="Opciones de respuesta para pregunta ${idx + 1}">
+            ${pregunta.opciones.map((op, opIdx) => `
+              <label class="option-card ${respondida && respuestas[pregunta.id] === opIdx ? 'selected' : ''}"
+                     for="opt-${pregunta.id}-${opIdx}" aria-label="${op.texto || op}">
+                <input type="radio" id="opt-${pregunta.id}-${opIdx}" name="q-${pregunta.id}" value="${opIdx}"
+                  class="visually-hidden" ${respondida && respuestas[pregunta.id] === opIdx ? 'checked' : ''}
+                  aria-checked="${respondida && respuestas[pregunta.id] === opIdx}">
+                <span class="option-indicator" aria-hidden="true"></span>
+                <span class="option-text">${op.texto || op}</span>
+              </label>
+            `).join("")}
+          </div>
+          <div class="question-error" id="qerr-${pregunta.id}" role="alert">⚠️ Por favor selecciona una opción de respuesta.</div>
+        `;
+        container.appendChild(block);
+      });
+      container.querySelectorAll("input[type='radio']").forEach(input => {
+        input.addEventListener("change", handleOptionChange);
+      });
+    }
+
+    function handleOptionChange(e) {
+      const input     = e.target;
+      const pregId    = input.name.replace("q-", "");
+      const opcionIdx = parseInt(input.value, 10);
+      Quiz.guardarRespuestaGeneral(pregId, opcionIdx);
+      const block = document.getElementById(`block-${pregId}`);
+      if (block) {
+        block.querySelectorAll(".option-card").forEach((card, idx) => {
+          card.classList.toggle("selected", idx === opcionIdx);
+          card.querySelector("input").setAttribute("aria-checked", idx === opcionIdx);
+        });
+        block.classList.add("answered");
+        block.classList.remove("has-error");
+        const errEl = document.getElementById(`qerr-${pregId}`);
+        if (errEl) errEl.classList.remove("visible");
+      }
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const respuestas = Quiz.getRespuestasGenerales();
+      const count = Object.keys(respuestas).length;
+      const pct   = Math.round((count / totalQ) * 100);
+      document.getElementById("progress-fill").style.width   = pct + "%";
+      document.getElementById("main-progress").setAttribute("aria-valuenow", pct);
+      document.getElementById("pct-label").textContent       = pct + "%";
+      document.getElementById("progress-counter").textContent = `${count} / ${totalQ} respondidas`;
+      document.getElementById("action-counter").textContent   = `${count}/${totalQ}`;
+    }
+
+    document.getElementById("btn-next").addEventListener("click", () => {
+      const validacion = Quiz.validarGenerales();
+      if (!validacion.ok) {
+        validacion.faltantes.forEach(pid => {
+          const block = document.getElementById(`block-${pid}`);
+          if (block) {
+            block.classList.add("has-error");
+            const errEl = document.getElementById(`qerr-${pid}`);
+            if (errEl) errEl.classList.add("visible");
+          }
+        });
+        const banner = document.getElementById("validation-banner");
+        const msg    = document.getElementById("validation-msg");
+        banner.classList.add("visible");
+        msg.textContent = `Faltan ${validacion.faltantes.length} pregunta(s) por responder.`;
+        const firstMissing = document.getElementById(`block-${validacion.faltantes[0]}`);
+        if (firstMissing) firstMissing.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      document.getElementById("validation-banner").classList.remove("visible");
+      Loading.show();
+      const result = Quiz.procesarGenerales();
+      if (result && result.ok) {
+        setTimeout(() => Nav.go("cuestionario-final.html"), 300);
+      } else {
+        Loading.hide();
+        alert("Error procesando las preguntas. Intenta de nuevo.");
+      }
+    });
+
+    const modal = document.getElementById("modal-cancel");
+    document.getElementById("btn-cancel").addEventListener("click", () => modal.classList.add("open"));
+    document.getElementById("modal-no").addEventListener("click",  () => modal.classList.remove("open"));
+    document.getElementById("modal-yes").addEventListener("click", () => { Quiz.cancelar(); Nav.go("eleccion.html"); });
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+
+    renderPreguntas();
+    updateProgress();
+  </script>
+</body>
+</html>
