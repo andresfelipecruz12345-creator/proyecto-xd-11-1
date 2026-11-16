@@ -472,7 +472,7 @@
     document.getElementById("form-login").addEventListener("submit", (e) => {
       e.preventDefault();
       hideAlert();
-      const correo    = document.getElementById("login-email").value.trim();
+      const correo     = document.getElementById("login-email").value.trim();
       const contrasena = document.getElementById("login-password").value;
 
       let hasError = false;
@@ -494,12 +494,29 @@
       }
       if (hasError) return;
 
-      const result = Auth.login({ correo, contrasena });
-      if (result.ok) {
-        showAlert("¡Bienvenido/a de vuelta, " + result.user.nombre.split(" ")[0] + "! 🎉", "success");
-        setTimeout(() => Nav.go("html/eleccion.html"), 900);
-      } else {
-        showAlert(result.error);
+      // Deshabilitar botón para evitar doble envío
+      const btnLogin = document.getElementById("btn-login");
+      btnLogin.disabled = true;
+      btnLogin.textContent = "Verificando...";
+
+      try {
+        const result = Auth.login({ correo, contrasena });
+        if (result.ok) {
+          btnLogin.setAttribute("data-navigating", "true");
+          showAlert("¡Bienvenido/a de vuelta, " + result.user.nombre.split(" ")[0] + "! 🎉", "success");
+          setTimeout(() => Nav.go("html/eleccion.html"), 900);
+        } else {
+          showAlert(result.error);
+        }
+      } catch (err) {
+        console.error("[Login] Error inesperado:", err);
+        showAlert("Ocurrió un error inesperado. Recarga la página e inténtalo de nuevo.");
+      } finally {
+        // Restaurar el botón solo si NO se inició una navegación
+        if (!btnLogin.getAttribute("data-navigating")) {
+          btnLogin.disabled = false;
+          btnLogin.textContent = "Iniciar Sesión";
+        }
       }
     });
 
@@ -534,12 +551,29 @@
 
       if (hasError) return;
 
-      const result = Auth.register({ nombre, correo, contrasena, ciudad, edad, telefono });
-      if (result.ok) {
-        showAlert("¡Cuenta creada exitosamente! 🎉 Redirigiendo...", "success");
-        setTimeout(() => Nav.go("html/eleccion.html"), 1100);
-      } else {
-        showAlert(result.error);
+      // Deshabilitar botón para evitar doble envío
+      const btnRegister = document.getElementById("btn-register");
+      btnRegister.disabled = true;
+      btnRegister.textContent = "Creando cuenta...";
+
+      try {
+        const result = Auth.register({ nombre, correo, contrasena, ciudad, edad, telefono });
+        if (result.ok) {
+          btnRegister.setAttribute("data-navigating", "true");
+          showAlert("¡Cuenta creada exitosamente! 🎉 Redirigiendo...", "success");
+          setTimeout(() => Nav.go("html/eleccion.html"), 1100);
+        } else {
+          showAlert(result.error);
+        }
+      } catch (err) {
+        console.error("[Registro] Error inesperado:", err);
+        showAlert("Ocurrió un error inesperado. Recarga la página e inténtalo de nuevo.");
+      } finally {
+        // Restaurar el botón solo si NO se inició una navegación
+        if (!btnRegister.getAttribute("data-navigating")) {
+          btnRegister.disabled = false;
+          btnRegister.textContent = "Crear Cuenta";
+        }
       }
     });
 
@@ -550,11 +584,18 @@
       });
     });
 
-    // ---- Redirigir si ya hay sesión ----
-    document.addEventListener("DOMContentLoaded", () => {
-      const user = Auth.getCurrentUser();
-      if (user) Nav.go("html/eleccion.html", 0);
-    });
+    // ---- Redirigir si ya hay sesión (consolidado con DOMContentLoaded de app.js) ----
+    // NOTA: app.js ya registra su propio DOMContentLoaded para Theme.init() y Loading.hide().
+    // Este bloque corre cuando el DOM ya está listo (el script está al final del body),
+    // por lo que se ejecuta directamente sin necesidad de otro listener redundante.
+    (function checkExistingSession() {
+      try {
+        const user = Auth.getCurrentUser();
+        if (user) Nav.go("html/eleccion.html", 0);
+      } catch (err) {
+        console.warn("[Session check] Error al verificar sesión:", err);
+      }
+    })();
   </script>
 </body>
 </html>

@@ -486,25 +486,66 @@
 
     // ---- Métricas ----
     const totalPreguntas = resultados.detalle.length;
-    const correctas = resultados.detalle.filter(d => d.tipo === "opcion_multiple" && d.esCorrecta).length;
-    const incorrectas = resultados.detalle.filter(d => d.tipo === "opcion_multiple" && !d.esCorrecta).length;
-    const libres = resultados.detalle.filter(d => d.tipo === "texto_libre").length;
+    const totalOM = resultados.detalle.filter(d => d.tipo === "opcion_multiple");
+    const correctasOM = totalOM.filter(d => d.esCorrecta).length;
+    const incorrectasOM = totalOM.filter(d => !d.esCorrecta).length;
+    const libres = resultados.detalle.filter(d => d.tipo === "texto_libre");
+    const hayLibres = libres.length > 0;
+    const hayOM = totalOM.length > 0;
 
     const metricsGrid = document.getElementById("metrics-grid");
-    metricsGrid.innerHTML = `
-      <div class="result-metric">
-        <p class="metric-value">${pct}%</p>
-        <p class="metric-label">Puntaje total</p>
-      </div>
-      <div class="result-metric">
-        <p class="metric-value" style="color:var(--color-success)">${correctas}</p>
-        <p class="metric-label">Correctas</p>
-      </div>
-      <div class="result-metric">
-        <p class="metric-value" style="color:var(--color-danger)">${incorrectas}</p>
-        <p class="metric-label">Incorrectas</p>
-      </div>
-    `;
+    if (hayOM && !hayLibres) {
+      // Solo opción múltiple
+      metricsGrid.innerHTML = `
+        <div class="result-metric">
+          <p class="metric-value">${pct}%</p>
+          <p class="metric-label">Puntaje total</p>
+        </div>
+        <div class="result-metric">
+          <p class="metric-value" style="color:var(--color-success)">${correctasOM}</p>
+          <p class="metric-label">Correctas</p>
+        </div>
+        <div class="result-metric">
+          <p class="metric-value" style="color:var(--color-danger)">${incorrectasOM}</p>
+          <p class="metric-label">Incorrectas</p>
+        </div>
+      `;
+    } else if (!hayOM && hayLibres) {
+      // Solo preguntas abiertas
+      const promClaves = libres.length > 0
+        ? Math.round(libres.reduce((acc, d) => acc + (d.puntoParcial || 0), 0) / libres.length)
+        : 0;
+      metricsGrid.innerHTML = `
+        <div class="result-metric">
+          <p class="metric-value">${pct}%</p>
+          <p class="metric-label">Puntaje total</p>
+        </div>
+        <div class="result-metric">
+          <p class="metric-value" style="color:var(--color-primary)">${libres.length}</p>
+          <p class="metric-label">Respuestas abiertas</p>
+        </div>
+        <div class="result-metric">
+          <p class="metric-value" style="color:var(--color-success)">${promClaves}%</p>
+          <p class="metric-label">Promedio por respuesta</p>
+        </div>
+      `;
+    } else {
+      // Mixto: opción múltiple + preguntas abiertas
+      metricsGrid.innerHTML = `
+        <div class="result-metric">
+          <p class="metric-value">${pct}%</p>
+          <p class="metric-label">Puntaje total</p>
+        </div>
+        <div class="result-metric">
+          <p class="metric-value" style="color:var(--color-success)">${correctasOM} <span style="font-size:var(--font-size-sm);font-weight:400">/ ${totalOM.length}</span></p>
+          <p class="metric-label">Correctas (opción múltiple)</p>
+        </div>
+        <div class="result-metric">
+          <p class="metric-value" style="color:var(--color-primary)">${libres.length}</p>
+          <p class="metric-label">Respuestas abiertas</p>
+        </div>
+      `;
+    }
 
     // ---- Ubicaciones ----
     const locTitle = document.getElementById("locations-title");
@@ -592,12 +633,25 @@
       } else {
         el.className = "detail-item libre";
         const palabras = item.respuestaUsuario ? item.respuestaUsuario.trim().split(/\s+/).filter(w=>w.length>0).length : 0;
+        // Mostrar palabras clave si las hay
+        let clavesHtml = "";
+        if (item.totalClaves > 0) {
+          const encontradas = item.clavesEncontradas || [];
+          clavesHtml = `
+            <p style="font-size:var(--font-size-xs); color:var(--color-text-muted); margin-top:var(--space-2);">
+              🔑 Palabras clave detectadas:
+              <strong style="color:var(--color-success)">${encontradas.length} / ${item.totalClaves}</strong>
+              ${encontradas.length > 0 ? `<span style="color:var(--color-text-secondary)"> — ${encontradas.join(", ")}</span>` : ""}
+            </p>
+          `;
+        }
         el.innerHTML = `
           <span class="detail-badge libre">💬 Respuesta libre</span>
           <p class="detail-q">${idx + 1}. ${item.texto}</p>
           <p class="detail-answer">
             <strong>Tu respuesta:</strong> ${item.respuestaUsuario || "Sin respuesta"}
           </p>
+          ${clavesHtml}
           <p style="font-size:var(--font-size-xs); color:var(--color-text-muted); margin-top:var(--space-1);">
             ${palabras} palabras — ${item.puntoParcial}% de aporte al puntaje
           </p>

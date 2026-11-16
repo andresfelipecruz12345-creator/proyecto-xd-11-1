@@ -188,17 +188,47 @@ const Quiz = (() => {
           tipo:            "opcion_multiple",
         });
       } else if (pregunta.tipo === "texto_libre") {
-        // Preguntas de entrevista: se valoran por extensión y coherencia
-        const palabras = respuesta ? respuesta.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
-        const puntoParcial = Math.min(palabras / (pregunta.minPalabras * 2), 1);
+        // ============================================================
+        // CALIFICACIÓN POR PALABRAS CLAVE
+        // Si la pregunta tiene palabrasClave[], se puntúa por cuántas
+        // están presentes en la respuesta (sin importar mayúsculas ni
+        // tildes). Si no tiene palabrasClave, se puntúa solo por
+        // extensión (como antes).
+        // ============================================================
+        const textoRespuesta = respuesta
+          ? respuesta.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          : "";
+
+        let puntoParcial = 0;
+        let clavesEncontradas = [];
+        let totalClaves = 0;
+
+        if (pregunta.palabrasClave && pregunta.palabrasClave.length > 0) {
+          totalClaves = pregunta.palabrasClave.length;
+          clavesEncontradas = pregunta.palabrasClave.filter(clave => {
+            const claveNorm = clave.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            return textoRespuesta.includes(claveNorm);
+          });
+          // Puntaje: fracción de claves encontradas (mínimo 20% si respondió algo)
+          const baseKeyword = clavesEncontradas.length / totalClaves;
+          const hayRespuesta = textoRespuesta.trim().length > 0 ? 0.2 : 0;
+          puntoParcial = Math.min(Math.max(baseKeyword, hayRespuesta), 1);
+        } else {
+          // Sin palabras clave: puntuar por extensión (mínimo el doble de minPalabras = 100%)
+          const palabras = textoRespuesta.trim().split(/\s+/).filter(w => w.length > 0).length;
+          puntoParcial = Math.min(palabras / ((pregunta.minPalabras || 8) * 2), 1);
+        }
+
         correctas += puntoParcial;
         total++;
         detalle.push({
-          id:              pregunta.id,
-          texto:           pregunta.texto,
-          respuestaUsuario:respuesta,
-          puntoParcial:    Math.round(puntoParcial * 100),
-          tipo:            "texto_libre",
+          id:               pregunta.id,
+          texto:            pregunta.texto,
+          respuestaUsuario: respuesta,
+          puntoParcial:     Math.round(puntoParcial * 100),
+          clavesEncontradas,
+          totalClaves,
+          tipo:             "texto_libre",
         });
       }
     });
@@ -320,6 +350,8 @@ const Quiz = (() => {
             esCorrecta:       d.esCorrecta        !== undefined ? d.esCorrecta : null,
             // texto_libre
             puntoParcial:     d.puntoParcial      !== undefined ? d.puntoParcial : null,
+            clavesEncontradas:d.clavesEncontradas !== undefined ? d.clavesEncontradas : null,
+            totalClaves:      d.totalClaves       !== undefined ? d.totalClaves : null,
           })),
           // Resumen estadístico de las respuestas
           totalPreguntas:   detalle.length,
